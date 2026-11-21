@@ -1,35 +1,52 @@
 # SmartBank-App
 
-Application bancaire desktop de démonstration réalisée avec Java 17, JavaFX et Maven.
+Point d’intégration de SmartBanking : compilation des deux modules, lancement du desktop et documentation commune. Le code JavaFX appartient désormais à `SmartBank-frontend` ; les modèles, JDBC et SQL à `SmartBank-backend`.
 
 ## Structure
 
 ```text
-bank_app/
-├── docs/                 Documentation d'intégration Java/JavaFX
-├── src/main/java/        Code source Java
-├── src/main/resources/   FXML, configuration et scripts SQL
-├── .gitignore
-└── pom.xml
+SmartBankingJ/
+├── SmartBank-App/        Agrégateur Maven, scripts et documentation
+├── SmartBank-frontend/   Application desktop JavaFX autonome
+└── SmartBank-backend/    Modèles métier, configuration et accès MySQL
 ```
 
 ## Prérequis
 
 - JDK 17 ou supérieur
 - Maven
-- MySQL ou MariaDB pour la base de données
+- MySQL ou MariaDB pour les futurs parcours persistants ; inutile pour afficher la connexion
 
 ## Compilation et lancement
 
 Depuis ce répertoire :
 
 ```bash
-mvn clean package
-mvn javafx:run
+mvn clean verify
+mvn -f ../SmartBank-frontend/pom.xml javafx:run
 ```
 
-Les paramètres de connexion par défaut se trouvent dans `src/main/resources/app.properties`.
-Adaptez-les à votre installation locale avant de lancer l'application.
+Les trois dépôts doivent être clonés côte à côte, avec les noms ci-dessus. Le POM est un agrégateur, pas un parent obligatoire : chaque module possède son propre POM et peut être compilé indépendamment.
+
+Sous PowerShell, un lanceur est également disponible :
+
+```powershell
+.\scripts\run-desktop.cmd
+# Avec un SDK JavaFX déjà installé, pour un lancement sans téléchargement :
+.\scripts\run-desktop.cmd -JavaHome 'C:\chemin\jdk-20' -JavaFxLib 'C:\chemin\javafx-sdk\lib'
+```
+
+Le script utilise aussi le runtime JavaFX local préparé dans `%LOCALAPPDATA%\SmartBankingJ\tools\javafx-runtime` s’il existe. Il compile uniquement les sources du frontend. Sans runtime local, Maven et un JDK 17+ sont nécessaires.
+
+La configuration JDBC est dans `../SmartBank-backend/src/main/resources/app.properties`. Aucun secret SQL et aucune dépendance MySQL ne sont embarqués dans le frontend. Les paramètres actuels du backend restent des valeurs de démonstration.
+
+## État et séparation des responsabilités
+
+- Le frontend affiche la connexion ; il ne vérifie pas encore les identifiants et n’accorde aucun accès.
+- Le backend est pour l’instant une bibliothèque Java. Aucun serveur HTTP, service d’authentification ou mécanisme de récupération n’est implémenté.
+- La prochaine étape est de définir puis implémenter le contrat d’authentification côté backend, avant de le consommer dans JavaFX.
+- Le frontend ne dépend pas directement du JAR backend. La séparation ne crée pas encore une communication entre les deux.
+- La documentation technique d’origine reste dans `docs/`. Les livrables personnels générés (cahier des charges, PDF, maquettes et fichiers temporaires associés) sont conservés dans `../Livrables-locaux/`, hors des trois dépôts. Les dossiers `output/`, `target/` et `tmp/` sont ignorés par Git.
 
 ## Documentation
 

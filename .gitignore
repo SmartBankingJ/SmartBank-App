@@ -16,3 +16,8 @@ hs_err_pid*.log
 # Operating system files
 .DS_Store
 Thumbs.db
+tmp/
+
+# Personal generated deliverables stay outside repositories.
+/output/
+/docs/Cahier-des-charges-SmartBanking-Fraude.md
