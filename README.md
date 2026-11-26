@@ -42,10 +42,10 @@ La configuration JDBC est dans `../SmartBank-backend/src/main/resources/app.prop
 
 ## État et séparation des responsabilités
 
-- Le frontend affiche la connexion ; il ne vérifie pas encore les identifiants et n’accorde aucun accès.
-- Le backend est pour l’instant une bibliothèque Java. Aucun serveur HTTP, service d’authentification ou mécanisme de récupération n’est implémenté.
-- La prochaine étape est de définir puis implémenter le contrat d’authentification côté backend, avant de le consommer dans JavaFX.
-- Le frontend ne dépend pas directement du JAR backend. La séparation ne crée pas encore une communication entre les deux.
+- Le frontend vérifie maintenant les identifiants auprès de l’API du backend ; le dashboard est réservé à une session authentifiée. Ses données bancaires restent des exemples.
+- Le backend expose une API locale sur `127.0.0.1:8081` pour connexion, sessions, déconnexion, changement de mot de passe et récupération. Voir son README pour la configuration MySQL, la migration et les tests.
+- Démarrer le backend avec `../SmartBank-backend/scripts/run-backend.cmd`, puis le frontend avec `scripts/run-desktop.cmd`. Le lanceur desktop n’importe jamais la base et ne démarre pas implicitement un serveur.
+- Le frontend ne dépend pas du JAR backend : la communication est HTTP/JSON. Gson est déclaré dans les POM ; le lanceur local accepte aussi `-GsonJar`.
 - La documentation technique d’origine reste dans `docs/`. Les livrables personnels générés (cahier des charges, PDF, maquettes et fichiers temporaires associés) sont conservés dans `../Livrables-locaux/`, hors des trois dépôts. Les dossiers `output/`, `target/` et `tmp/` sont ignorés par Git.
 
 ## Documentation

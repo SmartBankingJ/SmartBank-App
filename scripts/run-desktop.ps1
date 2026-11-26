@@ -1,6 +1,7 @@
 param(
     [string]$JavaHome = $env:JAVA_HOME,
-    [string]$JavaFxLib = $env:SMARTBANK_JAVAFX_LIB
+    [string]$JavaFxLib = $env:SMARTBANK_JAVAFX_LIB,
+    [string]$GsonJar = $env:SMARTBANK_GSON_JAR
 )
 
 $ErrorActionPreference = 'Stop'
@@ -28,19 +29,28 @@ if (-not $JavaFxLib) {
     $localRuntime = Join-Path $env:LOCALAPPDATA 'SmartBankingJ\tools\javafx-runtime'
     if (Test-Path -LiteralPath $localRuntime) { $JavaFxLib = $localRuntime }
 }
+if (-not $GsonJar) {
+    foreach ($candidate in @(
+        (Join-Path $env:LOCALAPPDATA 'SmartBankingJ\tools\auth-libs\gson-2.11.0.jar'),
+        (Join-Path $env:USERPROFILE '.m2\repository\com\google\code\gson\gson\2.11.0\gson-2.11.0.jar')
+    )) { if (Test-Path -LiteralPath $candidate) { $GsonJar = $candidate; break } }
+}
 
 Push-Location -LiteralPath $frontendPath
 try {
     Write-Output "SmartBanking desktop : $frontendPath"
     if ($JavaFxLib) {
+        if (-not $GsonJar) { throw 'Gson 2.11.0 est requis. Utilisez Maven ou renseignez -GsonJar.' }
+        $GsonJar = (Resolve-Path -LiteralPath $GsonJar).Path
         # Optional offline launch using an existing JavaFX SDK/runtime.
         $JavaFxLib = (Resolve-Path -LiteralPath $JavaFxLib).Path
         New-Item -ItemType Directory -Force -Path 'target\classes' | Out-Null
         $sources = @(Get-ChildItem 'src\main\java' -Filter '*.java' -Recurse | ForEach-Object FullName)
-        & $javacCommand --release 17 --module-path $JavaFxLib --add-modules javafx.controls,javafx.fxml -encoding UTF-8 -d 'target\classes' @sources
+        & $javacCommand --release 17 --module-path $JavaFxLib --add-modules javafx.controls,javafx.fxml -cp $GsonJar -encoding UTF-8 -d 'target\classes' @sources
         if ($LASTEXITCODE -ne 0) { throw 'Compilation JavaFX echouee.' }
         Copy-Item 'src\main\resources\*' 'target\classes' -Recurse -Force
-        & $javaCommand --module-path $JavaFxLib --add-modules javafx.controls,javafx.fxml -cp 'target\classes' ma.bankdirect.App
+        $desktopClasspath = 'target\classes;' + $GsonJar
+        & $javaCommand --module-path $JavaFxLib --add-modules javafx.controls,javafx.fxml -cp $desktopClasspath ma.bankdirect.App
         if ($LASTEXITCODE -ne 0) { throw 'Demarrage JavaFX echoue.' }
     } else {
         $maven = Get-Command mvn.cmd -ErrorAction SilentlyContinue
